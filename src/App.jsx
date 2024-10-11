@@ -9,21 +9,29 @@ import axios from 'axios';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import JobsPage from './pages/JobsPage';
+import PapersPage from './pages/author/PapersPage';
+import PaperPage from './pages/author/PaperPage';
 import NotFoundPage from './pages/NotFoundPage';
 import JobPage, { jobLoader } from './pages/JobPage';
 import AddJobPage from './pages/AddJobPage';
 import EditJobPage from './pages/EditJobPage';
-import SignupPage from './pages/SignUpPage';
+import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
+import AddNewMenuscript from './pages/author/AddNewMenuscript';
+import PaperForm from './pages/PaperForm';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // Check login status on component mount
+  const [userRole, setUserRole] = useState();
+
   useEffect(() => {
-    const user = localStorage.getItem('user');
+    const user = JSON.parse(localStorage.getItem('user'));
     if (user) {
       setIsLoggedIn(true);
+      setUserRole(user.role.title);
+      console.log("Role: " + user.role.title);
     }
+
   }, []);
 
   // Add New Job
@@ -72,7 +80,7 @@ const App = () => {
 
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path='/' element={<MainLayout isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}>
+      <Route path='/' element={<MainLayout isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userRole={userRole} />}>
         <Route index element={<HomePage />} />
         <Route path='/jobs' element={<JobsPage />} />
         <Route path='/add-job' element={<AddJobPage addJobSubmit={addJob} />} />
@@ -88,7 +96,17 @@ const App = () => {
         />
         <Route path='*' element={<NotFoundPage />} />
         <Route path='/signup' element={<SignupPage />} />
-        <Route path='/login' element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
+        {/* <Route path='/login' element={<LoginPage isLoggedIn={isLoggedIn}/>} /> */}
+        <Route path='/login' element={<LoginPage setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} />} />
+
+        <Route path='/addNewMenuscript' element={<AddNewMenuscript />} />
+        <Route path='/paperForm' element={<PaperForm />} />
+
+
+        {/* <Route path='/papers' element={<PapersPage />} /> */}
+        <Route path='/papers' element={<PapersPage />} />
+        <Route path='/paper/:id' element={<PaperPage />} /> {/* New Route */}
+
       </Route>
     )
   );

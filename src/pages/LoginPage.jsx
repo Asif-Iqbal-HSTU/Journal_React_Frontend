@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from '../axios';
 
-const LoginPage = ({ setIsLoggedIn }) => {
-  const [username, setUsername] = useState('');  
+// const LoginPage = ({ setIsLoggedIn }) => {
+const LoginPage = ({ setIsLoggedIn, setUserRole }) => {
+  const [username, setUsername] = useState('');
   const [role, setRole] = useState('');
   const [roles, setRoles] = useState('');
   const [password, setPassword] = useState('');
@@ -38,49 +39,70 @@ const LoginPage = ({ setIsLoggedIn }) => {
 
     try {
       const response = await axios.post('/api/login', loginData);
-      toast.success('Login successful!');
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      setIsLoggedIn(true); // Update login state
-      navigate('/'); // Redirect to home
+
+      if (response.status === 200 && response.data.user) {
+        toast.success(response.data.message);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        //localStorage.setItem('user_role', response.data.user_role);
+        //localStorage.setItem('user', response.data.user);
+        //const curr_user = JSON.parse(localStorage.getItem('user'));
+        //toast.success(curr_user.fullname);
+        //setIsLoggedIn(true); // Update login state
+        // Update the login state and role state
+        setIsLoggedIn(true);
+        setUserRole(response.data.user.role.title);
+        navigate('/'); // Redirect to home
+      }
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        toast.error('Invalid credentials');
-      } else if (error.response && error.response.status === 422) {
-        setErrors(error.response.data.errors);
-      } else {
-        toast.error('Something went wrong');
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 404) {
+          toast.error('User with this username and role not found');
+        } else if (status === 401) {
+          toast.error('Incorrect password');
+        } else if (status === 422) {
+          setErrors(data.errors); // Handle validation errors
+        } else {
+          toast.error('Something went wrong');
+        }
       }
     }
   };
 
+
   return (
-    <section className="bg-indigo-50">
-      <div className="container m-auto max-w-2xl py-24">
-        <div className="bg-white px-6 py-8 mb-4 shadow-md rounded-md border m-4 md:m-0">
-          <form onSubmit={submitLoginForm}>
+    <section className="bg-indigo-50 min-h-screen flex items-center justify-center">
+      <div className="container mx-auto p-4">
+        <div className="bg-white shadow-lg rounded-lg p-8 max-w-md mx-auto border border-gray-200">
+
+          <form className="space-y-6" onSubmit={submitLoginForm}>
             <h2 className="text-3xl text-center font-semibold mb-6">Login</h2>
 
-            {/* Username */}
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">Username</label>
+            {/* Username Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">Your username</label>
               <input
                 type="text"
-                className="border rounded w-full py-2 px-3"
+                id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                placeholder="Username"
               />
               {errors.username && <p className="text-red-500 text-sm">{errors.username[0]}</p>}
             </div>
 
-            {/* Role */}
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">Role</label>
+            {/* Role Selection */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">Select Role</label>
               <select
-                className="border rounded w-full py-2 px-3"
+                id="role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
               >
-                <option value="" disabled>Select Role</option>
+                <option value="" disabled>Choose a Role</option>
                 {roles.length > 0 ? (
                   roles.map((role) => (
                     <option key={role.id} value={role.id}>
@@ -94,32 +116,34 @@ const LoginPage = ({ setIsLoggedIn }) => {
               {errors.role_id && <p className="text-red-500 text-sm">{errors.role_id[0]}</p>}
             </div>
 
-            {/* Password */}
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">Password</label>
+            {/* Password Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">Your password</label>
               <input
                 type="password"
-                className="border rounded w-full py-2 px-3"
+                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                placeholder="••••••••"
+                required
               />
               {errors.password && <p className="text-red-500 text-sm">{errors.password[0]}</p>}
             </div>
 
             {/* Submit Button */}
-            <div>
-              <button
-                className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline"
-                type="submit"
-              >
-                Login
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-700 text-white hover:bg-blue-800 font-medium rounded-lg px-5 py-2.5 text-center focus:ring-4 focus:outline-none focus:ring-blue-300"
+            >
+              Submit
+            </button>
           </form>
         </div>
       </div>
     </section>
   );
+
 };
 
 export default LoginPage;
